@@ -1,13 +1,11 @@
 const { CustomError } = require("../middlewares/error")
-const User = require("../models/User")
-const Post = require("../models/Post")
-const Comment = require("../models/Comment")
-const Story = require("../models/Story")
+
+const models = require("../models/models")
 
 const getUserController = async (req, res, next) => {
     const { userId } = req.params
     try {
-        const user = await User.findById(userId)
+        const user = await models.User.findById(userId)
         if (!user) {
             throw new CustomError("No user found", 404)
         }
@@ -28,7 +26,7 @@ const updateUserController = async (req, res, next) => {
     const updateData = req.body
     try {
 
-        const userToUpdate = await User.findById(userId)
+        const userToUpdate = await models.User.findById(userId)
         if (!userToUpdate) {
             throw new CustomError("User not found!", 404)
         }
@@ -55,8 +53,8 @@ const followUserController = async (req, res, next) => {
             throw new CustomError("You can not follow yourself", 500)
         }
 
-        const userToFollow = await User.findById(userId)
-        const loggedInUser = await User.findById(_id)
+        const userToFollow = await models.User.findById(userId)
+        const loggedInUser = await models.User.findById(_id)
 
 
         if (!userToFollow || !loggedInUser) {
@@ -90,8 +88,8 @@ const unfollowUserController = async (req, res, next) => {
             throw new CustomError("You can not unfollow yourself", 500)
         }
 
-        const userToUnfollow = await User.findById(userId)
-        const loggedInUser = await User.findById(_id)
+        const userToUnfollow = await models.User.findById(userId)
+        const loggedInUser = await models.User.findById(_id)
 
 
 
@@ -125,8 +123,8 @@ const blockUserController = async (req, res, next) => {
             throw new CustomError("You can not block yourself", 500)
         }
 
-        const userToBlock = await User.findById(userId)
-        const loggedInUser = await User.findById(_id)
+        const userToBlock = await models.User.findById(userId)
+        const loggedInUser = await models.User.findById(_id)
 
         if (!userToBlock || !loggedInUser) {
             throw new CustomError("User not found!", 404)
@@ -160,8 +158,8 @@ const unBlockUserController = async (req, res, next) => {
             throw new CustomError("You can not unblock yourself", 500)
         }
 
-        const userToUnblock = await User.findById(userId)
-        const loggedInUser = await User.findById(_id)
+        const userToUnblock = await models.User.findById(userId)
+        const loggedInUser = await models.User.findById(_id)
 
         if (!userToUnblock || !loggedInUser) {
             throw new CustomError("User not found!", 404)
@@ -186,7 +184,7 @@ const unBlockUserController = async (req, res, next) => {
 const getBlocklistController = async (req, res, next) => {
     const { userId } = req.params
     try {
-        const user = await User.findById(userId).populate("blocklist", "username fullName profilePicture")
+        const user = await models.User.findById(userId).populate("blocklist", "username fullName profilePicture")
         if (!user) {
             throw new CustomError("User not found!", 404)
         }
@@ -209,31 +207,31 @@ const deleteUserController = async (req, res, next) => {
 
     try {
 
-        const userToDelete = await User.findById(userId)
+        const userToDelete = await models.User.findById(userId)
 
         if (!userToDelete) {
             throw new CustomError("User not found!", 404)
         }
 
-        await Post.deleteMany({ user: userId })
-        await Post.deleteMany({ "comments.user": userId })
-        await Post.deleteMany({ "comments.replies.user": userId })
-        await Comment.deleteMany({ user: userId })
-        await Story.deleteMany({ user: userId })
-        await Post.updateMany({ likes: userId }, { $pull: { likes: userId } })
-        await User.updateMany(
+        await models.Post.deleteMany({ user: userId })
+        await models.Post.deleteMany({ "comments.user": userId })
+        await models.Post.deleteMany({ "comments.replies.user": userId })
+        await models.Comment.deleteMany({ user: userId })
+        await models.Story.deleteMany({ user: userId })
+        await models.Post.updateMany({ likes: userId }, { $pull: { likes: userId } })
+        await models.User.updateMany(
             { _id: { $in: userToDelete.following } },
             { $pull: { followers: userId } })
-        await Comment.updateMany({}, { $pull: { likes: userId } })
-        await Comment.updateMany({ "replies.likes": userId }, { $pull: { "replies.likes": userId } })
-        await Post.updateMany({}, { $pull: { likes: userId } })
+        await models.Comment.updateMany({}, { $pull: { likes: userId } })
+        await models.Comment.updateMany({ "replies.likes": userId }, { $pull: { "replies.likes": userId } })
+        await models.Post.updateMany({}, { $pull: { likes: userId } })
 
-        const replyComments = await Comment.find({ "replies.user": userId })
+        const replyComments = await models.Comment.find({ "replies.user": userId })
 
         await Promise.all(
             replyComments.map(async (comment) => {
                 comment.replies = comment.replies.filter((reply) => reply.user.toString() != userId)
-                await Comment.save()
+                await models.Comment.save()
             })
         )
 
@@ -250,7 +248,7 @@ const searchUserController = async (req, res, next) => {
     const { query } = req.params
     try {
 
-        const users = await User.find({
+        const users = await models.User.find({
             $or: [
                 { username: { $regex: new RegExp(query, 'i') } },
                 { fullName: { $regex: new RegExp(query, 'i') } }
@@ -265,9 +263,6 @@ const searchUserController = async (req, res, next) => {
 
 }
 
-const generateFileUrl = (filename) => {
-    return process.env.URL + `/assets/images/${filename}`
-}
 
 const uploadProfilePictureController = async (req, res, next) => {
     const { userId } = req.params
@@ -278,8 +273,11 @@ const uploadProfilePictureController = async (req, res, next) => {
         return res.status(400).json({ message: "Uploaded filetype invalid!" });
     }
     const { filename } = req.file
+    const generateFileUrl = (filename) => {
+        return process.env.URL + `/assets/images/${filename}`
+    }
     try {
-        const user = await User.findByIdAndUpdate(userId, { profilePicture: generateFileUrl(filename) }, { new: true })
+        const user = await models.User.findByIdAndUpdate(userId, { profilePicture: generateFileUrl(filename) }, { new: true })
         if (!user) {
             throw new CustomError("User not found!", 404)
         }
@@ -304,9 +302,12 @@ const uploadCoverPictureController = async (req, res, next) => {
     }
 
     const { filename } = req.file
+    const generateFileUrl = (filename) => {
+        return process.env.URL + `/assets/images/${filename}`
+    }
 
     try {
-        const user = await User.findByIdAndUpdate(userId, { coverPicture: generateFileUrl(filename) }, { new: true })
+        const user = await models.User.findByIdAndUpdate(userId, { coverPicture: generateFileUrl(filename) }, { new: true })
         if (!user) {
             throw new CustomError("User not found!", 404)
         }
