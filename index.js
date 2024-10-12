@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser")
 const path = require("path")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/user")
+const postRoute = require("./routes/post")
+
 app.use(express.json())
 app.use(cookieParser())
 const { errorHandler } = require("./middlewares/error")
@@ -14,6 +16,8 @@ app.use("/assets", express.static(path.join(__dirname, "assets")))
 
 app.use("/api/auth", authRoute)
 app.use("/api/user", userRoute)
+app.use("/api/post", postRoute)
+
 app.use(errorHandler)
 
 app.get("/", (req, res) => {
