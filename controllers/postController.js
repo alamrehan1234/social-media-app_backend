@@ -1,5 +1,8 @@
 const { CustomError } = require("../middlewares/error")
 const models = require("../models/models")
+const generateFileURL = (filename) => {
+    return process.env.URL + `/assets/images/${filename}`
+}
 
 const createPostController = async (req, res, next) => {
     const { userId, caption } = req.body;
@@ -19,10 +22,6 @@ const createPostController = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
-
-const generateFileURL = (filename) => {
-    return process.env.URL + `/assets/images/${filename}`
 }
 
 const createPostWithImagesController = async (req, res, next) => {
@@ -50,6 +49,7 @@ const createPostWithImagesController = async (req, res, next) => {
         next(error);
     }
 }
+
 const updatePostController = async (req, res, next) => {
     const { postId } = req.params;
     const { caption } = req.body;
@@ -112,6 +112,7 @@ const getUserPostsController = async (req, res, next) => {
         next(error)
     }
 }
+
 const deletePostController = async (req, res, next) => {
     const { postId } = req.params;
     try {
@@ -133,8 +134,56 @@ const deletePostController = async (req, res, next) => {
     }
 }
 
+const likePostController = async (req, res, next) => {
+    const { postId } = req.params;
+    const { userId } = req.body;
+    try {
+        const postToLike = await models.Post.findById(postId)
+        if (!postToLike) {
+            throw new CustomError("Post not found", 404)
+        }
+        const user = await models.User.findById(userId)
+        if (!user) {
+            throw new CustomError("user not found", 404)
+        }
+        if (postToLike.likes.includes(userId)) {
+            throw new CustomError("You have alreday liked the Post!", 400)
+        }
+        postToLike.likes.push(userId)
+        await postToLike.save()
+        res.status(200).json({ message: "Post liked successfully!", post: postToLike })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+const dislikePostController = async (req, res, next) => {
+    const { postId } = req.params;
+    const { userId } = req.body;
+    try {
+        const postToDislike = await models.Post.findById(postId)
+        if (!postToDislike) {
+            throw new CustomError("Post not found", 404)
+        }
+        const user = await models.User.findById(userId)
+        if (!user) {
+            throw new CustomError("user not found", 404)
+        }
+        if (!postToDislike.likes.includes(userId)) {
+            throw new CustomError("You have not liked the Post yet!", 400)
+        }
+        postToDislike.likes = postToDislike.likes.filter(id => id.toString() !== userId)
+        await postToDislike.save()
+        res.status(200).json({ message: "Post disliked successfully!", post: postToDislike })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
 module.exports = {
     createPostController, createPostWithImagesController, updatePostController,
-    getPostsController, getUserPostsController, deletePostController
-
+    getPostsController, getUserPostsController, deletePostController,
+    likePostController, dislikePostController
 }
