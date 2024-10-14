@@ -9,7 +9,6 @@ const registerController = async (req, res, next) => {
         const { username, email, password } = req.body;
         const existingUser = await User.findOne({ $or: [{ username }, { email }] })
         if (existingUser) {
-            // res.status(400).json("Username or email id already exists!")
             throw new CustomError("Username or Email already exists!", 400)
         }
         const salt = await bcrypt.genSalt(10)
@@ -18,7 +17,7 @@ const registerController = async (req, res, next) => {
         const saveUser = await newUser.save()
         res.status(201).json(saveUser)
     } catch (error) {
-        // res.status(500).json(error)
+
         next(error);
     }
 }
