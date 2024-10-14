@@ -7,6 +7,7 @@ const path = require("path")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/user")
 const postRoute = require("./routes/post")
+const commentRoute = require("./routes/comment")
 
 app.use(express.json())
 app.use(cookieParser())
@@ -17,7 +18,7 @@ app.use("/assets", express.static(path.join(__dirname, "assets")))
 app.use("/api/auth", authRoute)
 app.use("/api/user", userRoute)
 app.use("/api/post", postRoute)
-
+app.use("/api/comment", commentRoute)
 app.use(errorHandler)
 
 app.get("/", (req, res) => {
