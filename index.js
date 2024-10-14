@@ -9,6 +9,7 @@ const userRoute = require("./routes/user")
 const postRoute = require("./routes/post")
 const commentRoute = require("./routes/comment")
 const storyRoute = require("./routes/story")
+const conversationRoute = require("./routes/conversation")
 
 app.use(express.json())
 app.use(cookieParser())
@@ -21,6 +22,7 @@ app.use("/api/user", userRoute)
 app.use("/api/post", postRoute)
 app.use("/api/comment", commentRoute)
 app.use("/api/story", storyRoute)
+app.use("/api/conversation", conversationRoute)
 
 app.use(errorHandler)
 
