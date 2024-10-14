@@ -10,19 +10,22 @@ const postRoute = require("./routes/post")
 const commentRoute = require("./routes/comment")
 const storyRoute = require("./routes/story")
 const conversationRoute = require("./routes/conversation")
+const messageRoute = require("./routes/message")
 
 app.use(express.json())
 app.use(cookieParser())
 const { errorHandler } = require("./middlewares/error")
+const veriftToken = require("./middlewares/verifyToken")
 
 app.use("/assets", express.static(path.join(__dirname, "assets")))
 
 app.use("/api/auth", authRoute)
-app.use("/api/user", userRoute)
-app.use("/api/post", postRoute)
-app.use("/api/comment", commentRoute)
-app.use("/api/story", storyRoute)
-app.use("/api/conversation", conversationRoute)
+app.use("/api/user", veriftToken, userRoute)
+app.use("/api/post", veriftToken, postRoute)
+app.use("/api/comment", veriftToken, commentRoute)
+app.use("/api/story", veriftToken, storyRoute)
+app.use("/api/conversation", veriftToken, conversationRoute)
+app.use("/api/message", veriftToken, messageRoute)
 
 app.use(errorHandler)
 
