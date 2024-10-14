@@ -21,6 +21,7 @@ app.use("/api/user", userRoute)
 app.use("/api/post", postRoute)
 app.use("/api/comment", commentRoute)
 app.use("/api/story", storyRoute)
+
 app.use(errorHandler)
 
 app.get("/", (req, res) => {
