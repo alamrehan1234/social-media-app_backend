@@ -28,18 +28,24 @@ const uploadToFirebase = async (req, res, next) => {
             }
 
             // Check if uploading files fieldname is allowed
-            if (!req.files.every(el => ["coverPicture", "profilePicture", "story"].includes(el.fieldname))) {
+            if (!req.files.every(el => ["coverPicture", "profilePicture", "story", "post"].includes(el.fieldname))) {
                 return res.status(400).send({ error: "uploaded file's fieldname invalid" });
             }
 
             // Check if uploadling profilePicture or coverPicture is not more than 1 file.
-            if (req.files.some(el => ["coverPicture", "profilePicture"].includes(el.fieldname)) && req.files.length >= 2) {
+            if (req.files.some(el => ["coverPicture", "profilePicture", "story"].includes(el.fieldname)) && req.files.length >= 2) {
                 return res.status(400).send({ error: "only single file is allowed for cover or profile picture" });
             }
             try {
                 // Create a file reference in Firebase Storage
 
-                const file = bucket.file(`images/${req.files[0].fieldname}/${req.files[0].fieldname}-${Date.now()}${path.extname(req.files[0].originalname)}`);
+                let file = undefined;
+                if (req.files[0].fieldname === "story") {
+                    file = bucket.file(`images/${req.files[0].fieldname}/${req.params.userId}/${req.files[0].fieldname}-${Date.now()}${path.extname(req.files[0].originalname)}`);
+
+                } else {
+                    file = bucket.file(`images/${req.files[0].fieldname}/${req.files[0].fieldname}-${Date.now()}${path.extname(req.files[0].originalname)}`);
+                }
 
                 // Create a stream to upload the file to Firebase Storage
                 const stream = file.createWriteStream({

@@ -9,10 +9,16 @@ const createStoryController = async (req, res, next) => {
         if (!user) {
             throw new CustomError("user not found", 404)
         }
-        let image = "";
-        if (req.file) {
-            image = process.env.URL + `/assets/images/${req.file.filename}`
+        if (!req.files.every(el => ["story"].includes(el.fieldname))) {
+            return res.status(400).send({ error: "uploaded file's fieldname invalid for this route" });
         }
+
+        if (!req.imageUrl) {
+            return res.status(500).send({ error: 'image URL not available' });
+        }
+        let image = req.imageUrl;
+
+
         const newStory = new models.Story({
             user: userId,
             text,

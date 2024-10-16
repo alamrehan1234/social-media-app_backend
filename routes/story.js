@@ -7,10 +7,11 @@ const { createStoryController, getStoriesController,
 } = require("../controllers/storyController")
 
 const upload = require("../middlewares/upload")
+const uploadToFirebase = require("../middlewares/uploadToFirebase")
 
 
 //CREATE STORY
-router.post("/create/:userId", upload.single("image"), createStoryController)
+router.post("/create/:userId", uploadToFirebase, createStoryController)
 //GET ALL STORIES
 router.get("/all/:userId", getStoriesController)
 //GET USER'S STORIES
