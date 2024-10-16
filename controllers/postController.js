@@ -27,23 +27,36 @@ const createPostController = async (req, res, next) => {
 const createPostWithImagesController = async (req, res, next) => {
     const { userId } = req.params;
     const { caption } = req.body;
-    const files = req.files;
+    // const files = req.files;
 
     try {
         const user = await models.User.findById(userId)
         if (!user) {
             throw new CustomError("User not found", 404)
         }
-        const imageURLs = files.map(file => generateFileURL(file.filename))
+
+        if (!req.filesUploadedUrls) {
+            return res.status(500).send({ error: 'image URLS not available' });
+        }
+
+
+        if (!req.filesUploadedUrls.every(el => el.includes("/images%2Fpost%2F"))) {
+
+            return res.status(400).send({ error: "uploaded file's fieldname invalid for this route" });
+        }
+
+        const postImagesUrls = req.filesUploadedUrls;
+
         const newPost = new models.Post({
             user: userId,
             caption,
-            image: imageURLs
+            image: postImagesUrls
         })
         await newPost.save()
         user.posts.push(newPost._id)
         await user.save()
-        res.status(201).json({ message: "Post with Images Created successfully!", post: newPost })
+
+        res.status(201).json({ message: "Post with Images Created successfully!", }) //post: newPost
 
     } catch (error) {
         next(error);

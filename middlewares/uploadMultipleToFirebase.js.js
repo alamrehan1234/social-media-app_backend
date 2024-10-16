@@ -1,14 +1,16 @@
 const multer = require("multer");
 const { bucket } = require("../config/firebaseConfig");
+const path = require("path")
 
 const storage = multer.memoryStorage();
 
 // Set up multer to handle multiple fields with dynamic names and maxCount
 const upload = multer({ storage: storage }).any(); // 'any' allows any number of files with different field names
 
-const uploadToFirebase = (req, res, next) => {
+const uploadMultipleToFirebase = (req, res, next) => {
     try {
         upload(req, res, async (err) => {
+            const userId = req.params.userId
             if (err) {
                 return res.status(500).send({ error: "File upload failed." });
             }
@@ -22,9 +24,9 @@ const uploadToFirebase = (req, res, next) => {
 
             // Loop over all files in req.files
             for (const file of req.files) {
-                const publicUrl = await uploadFileToFirebase(file); // Upload each file to Firebase
+                const publicUrl = await uploadFileToFirebase(file, userId); // Upload each file to Firebase
                 if (publicUrl) {
-                    uploadedFiles.push({ field: file.fieldname, url: publicUrl }); // Store the field name and URL
+                    uploadedFiles.push(publicUrl); // Store the field name and URL
                 }
             }
 
@@ -32,8 +34,9 @@ const uploadToFirebase = (req, res, next) => {
             req.filesUploadedUrls = uploadedFiles;
 
             // Call the next middleware/route handler
-            // next();
-            res.status(201).json("done!")
+            next();
+            // res.status(201).json("done!")
+            console.log("post created successfully!")
 
         });
     } catch (error) {
@@ -42,9 +45,9 @@ const uploadToFirebase = (req, res, next) => {
 };
 
 // Helper function to upload a single file to Firebase Storage
-const uploadFileToFirebase = async (file) => {
+const uploadFileToFirebase = async (file, userId) => {
     try {
-        const firebaseFile = bucket.file(`uploads/${Date.now()}_${file.originalname}`);
+        const firebaseFile = bucket.file(`images/${file.fieldname}/${userId}/${Date.now()}_${file.fieldname}${path.extname(file.originalname)}`);
         const stream = firebaseFile.createWriteStream({
             metadata: {
                 contentType: file.mimetype,
@@ -76,4 +79,4 @@ const uploadFileToFirebase = async (file) => {
     }
 };
 
-module.exports = uploadToFirebase;
+module.exports = uploadMultipleToFirebase;
