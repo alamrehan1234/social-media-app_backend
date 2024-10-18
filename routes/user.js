@@ -8,6 +8,7 @@ const { getUserController, updateUserController,
     uploadCoverPictureController } = require("../controllers/userController")
 
 const upload = require("../middlewares/upload")
+const uploadToFirebase = require("../middlewares/uploadToFirebase")
 
 // GET USER
 router.get("/:userId", getUserController)
@@ -28,9 +29,9 @@ router.delete("/delete/:userId", deleteUserController)
 //SEARCH USER
 router.get("/search/:query", searchUserController)
 // UPDATE PROFILE PICTURE
-router.put("/upload-profile-picture/:userId", upload.single("profilePicture"), uploadProfilePictureController)
+router.put("/upload-profile-picture/:userId", uploadToFirebase, uploadProfilePictureController)
 // UPDATE COVER PICTURE
-router.put("/upload-cover-picture/:userId", upload.single("coverPicture"), uploadCoverPictureController)
+router.put("/upload-cover-picture/:userId", uploadToFirebase, uploadCoverPictureController)
 
 
 module.exports = router

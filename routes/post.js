@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router();
 const upload = require("../middlewares/upload")
+const uploadMultipleToFirebase = require("../middlewares/uploadMultipleToFirebase.js")
 
 const { createPostController, createPostWithImagesController,
     updatePostController, getPostsController,
@@ -11,7 +12,7 @@ const { createPostController, createPostWithImagesController,
 //CREATE POST
 router.post("/create", createPostController)
 //CREATE POST WITH IMAGES
-router.post("/create/:userId", upload.array("images", 5), createPostWithImagesController)
+router.post("/create/:userId", uploadMultipleToFirebase, createPostWithImagesController)
 //UPDATE POST
 router.put("/update/:postId", updatePostController)
 //GET ALL POSTS

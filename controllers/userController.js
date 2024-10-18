@@ -266,18 +266,17 @@ const searchUserController = async (req, res, next) => {
 
 const uploadProfilePictureController = async (req, res, next) => {
     const { userId } = req.params
-    if (!req.file) {
-        return res.status(404).json({ message: "Uploaded file not found" });
+
+    if (!req.files.every(el => ["profilePicture"].includes(el.fieldname))) {
+        return res.status(400).send({ error: "uploaded file's fieldname invalid for this route" });
     }
-    if (!(req.file.mimetype === "image/png" || req.file.mimetype === "image/jpeg")) {
-        return res.status(400).json({ message: "Uploaded filetype invalid!" });
+
+    if (!req.imageUrl) {
+        return res.status(500).send({ error: 'image URL not available' });
     }
-    const { filename } = req.file
-    const generateFileUrl = (filename) => {
-        return process.env.URL + `/assets/images/${filename}`
-    }
+
     try {
-        const user = await models.User.findByIdAndUpdate(userId, { profilePicture: generateFileUrl(filename) }, { new: true })
+        const user = await models.User.findByIdAndUpdate(userId, { profilePicture: req.imageUrl }, { new: true })
         if (!user) {
             throw new CustomError("User not found!", 404)
         }
@@ -293,21 +292,16 @@ const uploadProfilePictureController = async (req, res, next) => {
 const uploadCoverPictureController = async (req, res, next) => {
     const { userId } = req.params
 
-    if (!req.file) {
-        return res.status(404).json({ message: "Uploaded file not found" });
+    if (!req.files.every(el => ["coverPicture"].includes(el.fieldname))) {
+        return res.status(400).send({ error: "uploaded file's fieldname invalid for this route" });
     }
 
-    if (!(req.file.mimetype === "image/png" || req.file.mimetype === "image/jpeg")) {
-        return res.status(400).json({ message: "Uploaded filetype invalid!" });
-    }
-
-    const { filename } = req.file
-    const generateFileUrl = (filename) => {
-        return process.env.URL + `/assets/images/${filename}`
+    if (!req.imageUrl) {
+        return res.status(500).send({ error: 'image URL not available' });
     }
 
     try {
-        const user = await models.User.findByIdAndUpdate(userId, { coverPicture: generateFileUrl(filename) }, { new: true })
+        const user = await models.User.findByIdAndUpdate(userId, { coverPicture: req.imageUrl }, { new: true })
         if (!user) {
             throw new CustomError("User not found!", 404)
         }
