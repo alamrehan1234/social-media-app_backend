@@ -44,7 +44,12 @@ const loginController = async (req, res, next) => {
         }
         const { password, ...data } = user._doc;
         const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY_JWT, { expiresIn: process.env.EXPIRY_KEY_JWT })
-        res.cookie("token", token).status(200).json({ message: "LoggedIn Successfully!", data })
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'None',
+            maxAge: 3 * 24 * 60 * 60 * 1000 // 5 days in milliseconds
+        }).status(200).json({ message: "LoggedIn Successfully!", data })
 
 
 
