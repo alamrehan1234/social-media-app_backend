@@ -1,5 +1,4 @@
 const { CustomError } = require("../middlewares/error")
-
 const models = require("../models/models")
 
 const getUserController = async (req, res, next) => {

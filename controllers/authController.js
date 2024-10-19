@@ -2,6 +2,7 @@ const User = require("../models/User")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 const { CustomError } = require("../middlewares/error");
+const nodemailer = require("nodemailer")
 
 
 const registerController = async (req, res, next) => {
@@ -71,25 +72,118 @@ const logoutController = async (req, res, next) => {
 
 const userFetchController = async (req, res, next) => {
     const token = req.cookies.token;
-    jwt.verify(token, process.env.SECRET_KEY_JWT, {}, async (err, data) => {
-        if (err) {
-            // res.status(500).json(err)
+    if (!token) {
+        res.status(404).json("Login Session not found")
+    } else {
+        jwt.verify(token, process.env.SECRET_KEY_JWT, {}, async (err, data) => {
+            if (err) {
 
-            // throw new CustomError(err, 500)
+                res.status(400)
+            }
+            try {
 
-            res.status(500)
-        }
-        try {
+                const id = data._id
+                const user = await User.findOne({ _id: id })
+                res.status(200).json(user)
 
-            const id = data._id
-            const user = await User.findOne({ _id: id })
-            res.status(200).json(user)
+            } catch (error) {
+                // res.status(501).json(error)
+                next(error)
+            }
+        })
+    }
 
-        } catch (error) {
-            // res.status(501).json(error)
-            next(error)
-        }
-    })
 }
 
-module.exports = { registerController, loginController, logoutController, userFetchController };
+
+const passwordResetController = async (req, res, next) => {
+
+    try {
+
+        const { email, newPassword, resetToken } = req.body;
+
+        if (email) {
+
+            const user = await User.findOne({ email });
+            if (!user) {
+                throw new CustomError("User with this email not found!", 404);
+            }
+
+            const resetToken = jwt.sign({ _id: user._id }, process.env.SECRET_KEY_JWT, { expiresIn: "15m" });
+
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_USERNAME,
+                    pass: process.env.EMAIL_PASSWORD
+                }
+            });
+
+            // Email
+
+            const mailOptions = {
+                from: `"Social Media" <${process.env.EMAIL_USERNAME}>`,
+                to: email,
+                subject: "Reset Your Password",
+                html: `
+                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
+                    <div style="max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 5px; overflow: hidden;">
+                        <div style="background-color: #f7f7f7; padding: 20px;">
+                            <h2 style="color: #555; text-align: center;">Password Reset Request</h2>
+                        </div>
+                        <div style="padding: 20px;">
+                            <p>Hello ${user.fullName},</p>
+                            <p>We received a request to reset your password. Use the token below to reset your password. This token is valid for <strong>15 minutes</strong> only:</p>
+                            <p>${resetToken}</p>
+                            <p>If you didn’t request this, you can safely ignore this email.</p>
+                            <p>Thanks,<br />The Support Team</p>
+                        </div>
+                        <div style="background-color: #f7f7f7; padding: 10px; text-align: center;">
+                            <p style="font-size: 12px; color: #999;">If you have any questions, feel free to contact us.</p>
+                            <p style="font-size: 12px; color: #999;">&copy; 2024 Social Media. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>
+                `
+            };
+
+            await transporter.sendMail(mailOptions);
+            return res.status(200).json({ message: "Password reset link sent to your email! Enter resetToken & newPassword and send request again!", note: "Ass user has invalid emails, Token is also made visible here!", resetToken: resetToken });
+        }
+
+
+        if (resetToken && newPassword) {
+
+            jwt.verify(resetToken, process.env.SECRET_KEY_JWT, {}, async (err, decoded) => {
+                if (err) {
+
+                    return res.status(400).json(err)
+                }
+
+                const user = await User.findById(decoded._id);
+                if (!user) {
+                    throw new CustomError("User not found!", 404);
+                }
+                // Hash the new password
+                const salt = await bcrypt.genSalt(10);
+                const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+                user.password = hashedPassword;
+                await user.save();
+
+                return res.status(200).json({ message: "Password reset successfully!" });
+            });
+        }
+
+        else {
+            throw new CustomError("Invalid request", 400);
+        }
+
+    } catch (error) {
+        next(error)
+    }
+
+};
+
+
+module.exports = { registerController, loginController, logoutController, userFetchController, passwordResetController };

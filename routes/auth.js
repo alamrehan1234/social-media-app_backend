@@ -1,7 +1,7 @@
 const express = require("express")
 const router = express.Router();
 const { registerController, loginController,
-    logoutController, userFetchController } = require("../controllers/authController")
+    logoutController, userFetchController, passwordResetController } = require("../controllers/authController")
 
 // Register
 router.post("/register", registerController)
@@ -12,5 +12,7 @@ router.get("/logout", logoutController)
 // fetch current user
 router.get("/refetch", userFetchController)
 
+// password reset functionality
+router.post('/password-reset', passwordResetController);
 
 module.exports = router;
