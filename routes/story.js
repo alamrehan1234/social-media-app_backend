@@ -6,7 +6,6 @@ const { createStoryController, getStoriesController,
     deleteUserStoriesController
 } = require("../controllers/storyController")
 
-const upload = require("../middlewares/upload")
 const uploadToFirebase = require("../middlewares/uploadToFirebase")
 
 

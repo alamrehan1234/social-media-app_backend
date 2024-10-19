@@ -1,8 +1,5 @@
 const { CustomError } = require("../middlewares/error")
 const models = require("../models/models")
-const generateFileURL = (filename) => {
-    return process.env.URL + `/assets/images/${filename}`
-}
 
 const createPostController = async (req, res, next) => {
     const { userId, caption } = req.body;

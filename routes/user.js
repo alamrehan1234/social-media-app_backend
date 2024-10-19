@@ -7,7 +7,6 @@ const { getUserController, updateUserController,
     searchUserController, uploadProfilePictureController,
     uploadCoverPictureController } = require("../controllers/userController")
 
-const upload = require("../middlewares/upload")
 const uploadToFirebase = require("../middlewares/uploadToFirebase")
 
 // GET USER
