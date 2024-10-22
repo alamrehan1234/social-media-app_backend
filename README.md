@@ -37,7 +37,7 @@ Follow these steps to clone, set up, and run the backend on your local machine:
 
 1. **Clone the repo**:
    ```bash
-   git clone https://github.com/your-username/social-media-app.git
+   [git clone https://github.com/alamrehan1234/social-media-app_backend
    cd social-media-app
    ```
 
