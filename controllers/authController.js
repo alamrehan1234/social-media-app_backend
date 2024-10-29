@@ -63,6 +63,7 @@ const loginController = async (req, res, next) => {
 
 const logoutController = async (req, res, next) => {
     try {
+        console.log(res.cookies.token)
         if (!req.cookies.token) {
             throw new CustomError("No Session Found To Logout!", 404)
         }

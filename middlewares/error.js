@@ -2,7 +2,9 @@ const errorHandler = (err, req, res, next) => {
     if (err instanceof CustomError) {
         return res.status(err.status).json({ error: err.message })
     }
-    return res.status(500).json({ error: "Internal Server Error" })
+    let { status = 500, message = "some error occoured" } = err;
+
+    return res.status(status).json({ error: message })
 }
 
 class CustomError extends Error {
