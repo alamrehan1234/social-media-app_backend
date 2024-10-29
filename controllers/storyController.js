@@ -29,8 +29,8 @@ const createStoryController = async (req, res, next) => {
         res.status(201).json(newStory)
 
     } catch (error) {
-        // next(error)
-        console.log(error)
+        next(error)
+        // console.log(error)
     }
 }
 
